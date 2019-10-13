@@ -26,7 +26,7 @@ module.exports.create = async (event, context) => {
       }
     }
     await put(params)
-    return sendResponse(200, { message: "Creado Correctamente" }, headers)
+    return sendResponse(201, { message: "Creado Correctamente" }, headers)
   }
   catch (e) {
     console.error(e)
