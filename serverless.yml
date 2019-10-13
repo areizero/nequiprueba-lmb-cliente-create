@@ -8,6 +8,12 @@ provider:
   environment:    
     PATH_RESOURCES: /v1/clientes/create
 
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:*
+      Resource: arn:aws:dynamodb:us-east-1:124436490636:table/nequi-cliente
+
 functions:
   createCliente:
     handler: handler.create

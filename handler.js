@@ -1,5 +1,8 @@
 'use strict'
 
+const AWS = require('aws-sdk')
+const docDynamo = new AWS.DynamoDB.DocumentClient()
+
 const headers = {
   'Content-Type': 'application/json',
   'Access-Control-Allow-Origin': '*',
@@ -9,8 +12,30 @@ const headers = {
 /**
  * Servicio que crea un cliente
  */
-module.exports.create = async event => {
-  return sendResponse(200, { message: "todo OK" }, headers)
+module.exports.create = async (event, context) => {  
+  try {
+    let clienteRq = JSON.parse(event.body)
+    let params = {
+      TableName: 'nequi-cliente',
+      Item: {
+        id: `${clienteRq.idTipo}-${clienteRq.idNumero}`,
+        edad: clienteRq.edad,
+        nombre: clienteRq.nombre,
+        apellido: clienteRq.apellido,
+        ciudadNacimiento: clienteRq.ciudadNacimiento
+      }
+    }
+    await put(params)
+    return sendResponse(200, { message: "Creado Correctamente" }, headers)
+  }
+  catch (e) {
+    console.error(e)
+    return sendResponse(500, {message: `Internal server error: ${e}` }, headers)    
+  }
+}
+
+const put = (params) => {
+  return docDynamo.put(params).promise()
 }
 
 // metodos de respuesta
