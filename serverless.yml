@@ -13,6 +13,10 @@ provider:
       Action:
         - dynamodb:*
       Resource: arn:aws:dynamodb:us-east-1:124436490636:table/nequi-cliente
+    - Effect: "Allow"
+      Action:
+        - s3:*
+      Resource: arn:aws:s3:::nequiprueba-clientes-perfil
 
 functions:
   createCliente:

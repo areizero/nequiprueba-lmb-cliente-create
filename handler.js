@@ -2,6 +2,9 @@
 
 const AWS = require('aws-sdk')
 const docDynamo = new AWS.DynamoDB.DocumentClient()
+const s3 = new AWS.S3({})
+
+const tableName = 'nequi-cliente'
 
 const headers = {
   'Content-Type': 'application/json',
@@ -12,30 +15,45 @@ const headers = {
 /**
  * Servicio que crea un cliente
  */
-module.exports.create = async (event, context) => {  
-  try {
+module.exports.create = async (event, context) => {
+  try {    
     let clienteRq = JSON.parse(event.body)
+    let s3File = await uploadImage(`${clienteRq.idTipo}-${clienteRq.idNumero}`, clienteRq.imagenPerfil)
     let params = {
-      TableName: 'nequi-cliente',
+      TableName: tableName,
       Item: {
         id: `${clienteRq.idTipo}-${clienteRq.idNumero}`,
         edad: clienteRq.edad,
         nombre: clienteRq.nombre,
         apellido: clienteRq.apellido,
-        ciudadNacimiento: clienteRq.ciudadNacimiento
+        ciudadNacimiento: clienteRq.ciudadNacimiento,
+        imagenPerfil: s3File.Location
       }
     }
-    await put(params)
+    await put(params)    
     return sendResponse(201, { message: "Creado Correctamente" }, headers)
   }
   catch (e) {
     console.error(e)
-    return sendResponse(500, {message: `Internal server error: ${e}` }, headers)    
+    return sendResponse(500, { message: `Internal server error: ${e}` }, headers)
   }
 }
 
 const put = (params) => {
   return docDynamo.put(params).promise()
+}
+
+const uploadImage = (id, imagenPerfil) => {
+  const base64Data = new Buffer.from(imagenPerfil.replace(/^data:image\/\w+;base64,/, ""), 'base64')
+  const type = imagenPerfil.split(';')[0].split('/')[1]
+  const params = {
+    Bucket: 'nequiprueba-clientes-perfil',
+    Key: `${id}.${type}`,
+    Body: base64Data,
+    ContentEncoding: 'base64',
+    ContentType: `image/${type}`
+  }
+  return s3.upload(params).promise()
 }
 
 // metodos de respuesta
